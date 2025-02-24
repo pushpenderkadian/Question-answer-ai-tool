@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>WebSocket Q&A Tester</title>
+        <style>
+            body {
+                font-family: 'Arial', sans-serif;
+                background: #f0f2f5;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+            .container {
+                background: white;
+                padding: 20px;
+                border-radius: 10px;
+                box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+                width: 90%;
+                max-width: 500px;
+            }
+            h2 {
+                color: #333;
+                text-align: center;
+            }
+            .txtbox, button {
+                width: 95%;
+                margin: 10px 0;
+                padding: 10px;
+                font-size: 16px;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+                display: block;
+            }
+            button {
+                background: #007bff;
+                color: white;
+                cursor: pointer;
+                border: none;
+            }
+            button:hover {
+                background: #0056b3;
+            }
+            .checkbox-container {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-top: 10px;
+            }
+            .checkbox-container label {
+                font-size: 16px;
+                cursor: pointer;
+            }
+            #output {
+                margin-top: 20px;
+                background: #f8f9fa;
+                padding: 10px;
+                border-radius: 5px;
+                max-height: 200px;
+                overflow-y: auto;
+                font-size: 14px;
+            }
+        </style>
+        <script>
+            let socket;
+            function connectWebSocket() {
+                socket = new WebSocket("ws://localhost:8000/ws/query");
+                document.getElementById("connect-btn").innerText = "Disconnect";
+                socket.onclose = function() {
+                    document.getElementById("connect-btn").innerText = "Connect";
+                };
+                socket.onmessage = function(event) {
+                    const message = JSON.parse(event.data);
+                    const outputDiv = document.getElementById("output");
+                    let text = "";
+                    if (message.status) {
+                        text = `<p><strong>Status:</strong> ${message.status}</p>`;
+                    } else if (message.data) {
+                        text = `<p><strong>Answer:</strong> ${message.data.answer}</p>`;
+                    } else if (message.error) {
+                        text = `<p style='color:red'><strong>Error:</strong> ${message.error}</p>`;
+                    }
+                    outputDiv.innerHTML += text;
+                };
+            }
+            function toggleConnection() {
+                if (!socket || socket.readyState === WebSocket.CLOSED) {
+                    connectWebSocket();
+                } else {
+                    socket.close();
+                    document.getElementById("connect-btn").innerText = "Connect";
+                }
+            }
+            function sendQuery() {
+                const urls = document.getElementById("urls").value;
+                const question = document.getElementById("question").value;
+                const expandedAnswer = document.getElementById("expanded_answer").checked;
+                if (!socket || socket.readyState === WebSocket.CLOSED) {
+                    alert("Please connect to WebSocket first");
+                    return;
+                }
+                if (!urls || !question) {
+                    alert("Please enter URLs and question");
+                    return;
+                }
+                const message = {
+                    urls: urls.split(",").map(url => url.trim()),
+                    question: question,
+                    expanded_answer: expandedAnswer
+                };
+                socket.send(JSON.stringify(message));
+            }
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <h2>WebSocket Q&A Tester</h2>
+            <input type="text" class="txtbox" id="urls" placeholder="Enter URLs (comma-separated)"><br>
+            <input type="text" class="txtbox" id="question" placeholder="Enter your question"><br>
+            <div class="checkbox-container">
+                <input type="checkbox" id="expanded_answer">
+                <label for="expanded_answer">Expand Answer</label>
+            </div>
+            <button id="connect-btn" onclick="toggleConnection()">Connect</button>
+            <button onclick="sendQuery()">Send Query</button>
+            <div id="output"></div>
+        </div>
+    </body>
+    </html>
