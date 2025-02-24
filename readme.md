@@ -39,6 +39,14 @@ Ensure you have the following installed on your system:
    ```bash
    uvicorn main:app --host 0.0.0.0 --port 8000
    ```
+   OR
+   ```bash
+   python main.py
+   ```
+   OR
+   ```bash
+   python3 main.py
+   ```
 5. Open your browser and visit `http://localhost:8000` to use the interface.
 
 6. Open your browser and visit `http://localhost:8000/docs` to get the api doc for rest api (frontend is using socket).
